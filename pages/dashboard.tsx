@@ -54,7 +54,6 @@ export default function DashboardPage() {
     if (ready && !authenticated) {
       router.push("/");
     }
-    console.log("address", smartWalletAddress);
   }, [ready, authenticated, router]);
 
   const onMint = async () => {

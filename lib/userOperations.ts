@@ -55,6 +55,7 @@ export const addPaymasterAndDataToUserOp = async (
   return userOpWithPaymasterAndData;
 };
 
+// Adapted to viem from https://github.com/stackup-wallet/userop.js/blob/main/src/context.ts
 export const packUserOp = (userOp: UserOperationStruct) => {
   const packedUserOp = encodeAbiParameters(
     [
@@ -86,6 +87,7 @@ export const packUserOp = (userOp: UserOperationStruct) => {
   return packedUserOp;
 };
 
+// Adapted to viem from https://github.com/stackup-wallet/userop.js/blob/main/src/context.ts
 export const computeUserOpHash = (userOp: UserOperationStruct) => {
   const packedUserOp = packUserOp(userOp);
   const encodedUserOp = encodeAbiParameters(
