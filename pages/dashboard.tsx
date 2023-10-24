@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import Head from "next/head";
-import { useSmartAccount } from "../hooks/SmartWalletContext";
+import { useSmartAccount } from "../hooks/SmartAccountContext";
 import {
   BASE_GOERLI_ENTRYPOINT_ADDRESS,
   BASE_GOERLI_PAYMASTER_URL,

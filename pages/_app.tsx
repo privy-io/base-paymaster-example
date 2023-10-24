@@ -4,7 +4,7 @@ import Head from "next/head";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { useRouter } from "next/router";
 import { baseGoerli } from "viem/chains";
-import { SmartAccountProvider } from "../hooks/SmartWalletContext";
+import { SmartAccountProvider } from "../hooks/SmartAccountContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
