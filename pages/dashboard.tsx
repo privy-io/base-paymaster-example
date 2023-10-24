@@ -69,37 +69,36 @@ export default function DashboardPage() {
     setIsMinting(true);
     const toastId = toast.loading("Minting...");
 
-    // Build the initial user op by encoding function data for the ERC-721
+    // (1) Build the initial user op by encoding function data for the ERC-721
     // `mint` method
-    const initialUserOp: UserOperationStruct =
-      await smartAccountProvider.buildUserOperationFromTx({
-        from: smartAccountAddress as `0x${string}`,
-        to: NFT_ADDRESS,
-        data: encodeFunctionData({
-          abi: ABI,
-          functionName: "mint",
-          args: [smartAccountAddress],
-        }),
-      });
+    const initialUserOp = await smartAccountProvider.buildUserOperationFromTx({
+      from: smartAccountAddress as `0x${string}`,
+      to: NFT_ADDRESS,
+      data: encodeFunctionData({
+        abi: ABI,
+        functionName: "mint",
+        args: [smartAccountAddress],
+      }),
+    });
     const formattedUserOp = formatUserOpAsHex(initialUserOp);
 
-    // Buffer `preVerificationGas` and `verificationGasLimit` with gas needed to
+    // (2) Buffer `preVerificationGas` and `verificationGasLimit` with gas needed to
     // verify the paymaster
     const bufferedUserOp = bufferUserOpWithVerificationGas(formattedUserOp);
 
-    // Query Base Goerli paymaster and populate `paymasterAndData` field of user op
+    // (3) Query Base Goerli paymaster and populate `paymasterAndData` field of user op
     const userOpWithPaymaster = await addPaymasterAndDataToUserOp(
       bufferedUserOp,
       basePaymasterRpc
     );
 
-    // Hash and sign the user op
+    // (4) Hash and sign the user op
     const signedUserOp = await signUserOp(
       userOpWithPaymaster,
       smartAccountProvider
     );
 
-    // Submit the user op to the mempool and get hash
+    // (5) Submit the user op to the mempool and get hash
     const userOpHash = await baseBundlerRpc.sendUserOperation(
       signedUserOp,
       BASE_GOERLI_ENTRYPOINT_ADDRESS
