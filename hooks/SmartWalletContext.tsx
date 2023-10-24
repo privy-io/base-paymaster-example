@@ -10,27 +10,32 @@ import {
 } from "@alchemy/aa-accounts";
 import { BASE_GOERLI_ENTRYPOINT_ADDRESS } from "../lib/constants";
 
-interface SmartWalletInterface {
+interface SmartAccountInterface {
+  /** ConnectedWallet representing the user's EOA (embedded wallet) */
   eoa?: ConnectedWallet;
-  signer?: SmartAccountSigner;
-  provider?: AlchemyProvider;
-  address?: string;
-  smartWalletReady: boolean;
+  /** SmartAccountSigner representing the signer for the smart account */
+  smartAccountSigner?: SmartAccountSigner;
+  /** AlchemyProvider to send RPC requests to/from the smart account */
+  smartAccountProvider?: AlchemyProvider;
+  /** Smart account address */
+  smartAccountAddress?: string;
+  /** Boolean to indicate whether the smart account state has initialized */
+  smartAccountReady: boolean;
 }
 
-const SmartWalletContext = React.createContext<SmartWalletInterface>({
+const SmartAccountContext = React.createContext<SmartAccountInterface>({
   eoa: undefined,
-  signer: undefined,
-  provider: undefined,
-  address: undefined,
-  smartWalletReady: false,
+  smartAccountSigner: undefined,
+  smartAccountProvider: undefined,
+  smartAccountAddress: undefined,
+  smartAccountReady: false,
 });
 
-export const useSmartWallet = () => {
-  return useContext(SmartWalletContext);
+export const useSmartAccount = () => {
+  return useContext(SmartAccountContext);
 };
 
-export const SmartWalletProvider = ({
+export const SmartAccountProvider = ({
   children,
 }: {
   children: React.ReactNode;
@@ -39,27 +44,33 @@ export const SmartWalletProvider = ({
   const embeddedWallet = wallets.find(
     (wallet) => wallet.walletClientType === "privy"
   );
-  const [smartWalletReady, setSmartWalletReady] = useState(false);
+  const [smartAccountReady, setSmartAccountReady] = useState(false);
   const [eoa, setEoa] = useState<ConnectedWallet | undefined>();
-  const [signer, setSigner] = useState<SmartAccountSigner | undefined>();
-  const [provider, setProvider] = useState<AlchemyProvider | undefined>();
-  const [address, setAddress] = useState<string | undefined>();
+  const [smartAccountSigner, setSmartAccountSigner] = useState<
+    SmartAccountSigner | undefined
+  >();
+  const [smartAccountProvider, setSmartAccountProvider] = useState<
+    AlchemyProvider | undefined
+  >();
+  const [smartAccountAddress, setSmartAccountAddress] = useState<
+    string | undefined
+  >();
 
   useEffect(() => {
     const createSmartWallet = async (eoa: ConnectedWallet) => {
       setEoa(eoa);
-      const eip1193provider = await eoa.getEthereumProvider();
+      const eoaProvider = await eoa.getEthereumProvider();
       const eoaClient = createWalletClient({
         account: eoa.address as `0x${string}`,
         chain: baseGoerli,
-        transport: custom(eip1193provider),
+        transport: custom(eoaProvider),
       });
 
       const signer: SmartAccountSigner = new WalletClientSigner(
         eoaClient,
         "json-rpc"
       );
-      setSigner(signer);
+      setSmartAccountSigner(signer);
 
       const provider = new AlchemyProvider({
         apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY as string,
@@ -75,26 +86,26 @@ export const SmartWalletProvider = ({
             rpcClient,
           })
       );
-      setProvider(provider);
+      setSmartAccountProvider(provider);
 
-      const smartWalletAddress = await provider.getAddress();
-      setAddress(smartWalletAddress);
-      setSmartWalletReady(true);
+      const address = await provider.getAddress();
+      setSmartAccountAddress(address);
+      setSmartAccountReady(true);
     };
     if (embeddedWallet) createSmartWallet(embeddedWallet);
   }, [embeddedWallet]);
 
   return (
-    <SmartWalletContext.Provider
+    <SmartAccountContext.Provider
       value={{
+        smartAccountReady: smartAccountReady,
+        smartAccountProvider: smartAccountProvider,
+        smartAccountSigner: smartAccountSigner,
+        smartAccountAddress: smartAccountAddress,
         eoa: eoa,
-        signer: signer,
-        provider: provider,
-        address: address,
-        smartWalletReady: smartWalletReady,
       }}
     >
       {children}
-    </SmartWalletContext.Provider>
+    </SmartAccountContext.Provider>
   );
 };

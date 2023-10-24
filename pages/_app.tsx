@@ -4,7 +4,7 @@ import Head from "next/head";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { useRouter } from "next/router";
 import { baseGoerli } from "viem/chains";
-import { SmartWalletProvider } from "../hooks/SmartWalletContext";
+import { SmartAccountProvider } from "../hooks/SmartWalletContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -63,10 +63,10 @@ function MyApp({ Component, pageProps }: AppProps) {
         }}
         onSuccess={() => router.push("/dashboard")}
       >
-        <SmartWalletProvider>
+        <SmartAccountProvider>
           <ToastContainer position="top-right" />
           <Component {...pageProps} />
-        </SmartWalletProvider>
+        </SmartAccountProvider>
       </PrivyProvider>
     </>
   );
