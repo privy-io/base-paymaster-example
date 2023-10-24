@@ -14,7 +14,6 @@ import ABI from "../lib/nftABI.json";
 import {
   createPublicErc4337Client,
   PublicErc4337Client,
-  type UserOperationStruct,
 } from "@alchemy/aa-core";
 import { baseGoerli } from "viem/chains";
 import {
