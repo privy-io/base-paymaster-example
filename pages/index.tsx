@@ -1,16 +1,14 @@
 import Portal from "../components/graphics/Portal";
-import { usePrivy } from "@privy-io/react-auth";
+import { useLogin } from "@privy-io/react-auth";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
 
 export default function LoginPage() {
-  const { login, ready, authenticated } = usePrivy();
   const router = useRouter();
-
-  useEffect(() => {
-    if (ready && authenticated) router.push("/dashboard");
-  }, [ready, authenticated]);
+  const { login } = useLogin({
+    // Navigate the user to the dashboard after logging in
+    onComplete: () => router.push("/dashboard"),
+  });
 
   return (
     <>

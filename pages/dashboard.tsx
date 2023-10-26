@@ -3,31 +3,21 @@ import React, { useEffect, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import Head from "next/head";
 import { useSmartAccount } from "../hooks/SmartAccountContext";
-import {
-  BASE_GOERLI_ENTRYPOINT_ADDRESS,
-  BASE_GOERLI_PAYMASTER_URL,
-  BASE_GOERLI_SCAN_URL,
-  NFT_ADDRESS,
-} from "../lib/constants";
-import { Client, createPublicClient, encodeFunctionData, http } from "viem";
+import { BASE_GOERLI_SCAN_URL, NFT_ADDRESS } from "../lib/constants";
+import { encodeFunctionData } from "viem";
 import ABI from "../lib/nftABI.json";
-import {
-  createPublicErc4337Client,
-  PublicErc4337Client,
-} from "@alchemy/aa-core";
-import { baseGoerli } from "viem/chains";
-import {
-  addPaymasterAndDataToUserOp,
-  bufferUserOpWithVerificationGas,
-  formatUserOpAsHex,
-  signUserOp,
-} from "../lib/userOperations";
 import { ToastContainer, toast } from "react-toastify";
+import { Alert } from "../components/AlertWithLink";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { ready, authenticated, user, logout } = usePrivy();
-  const { smartAccountAddress, smartAccountProvider, eoa } = useSmartAccount();
+  const {
+    smartAccountAddress,
+    smartAccountProvider,
+    sendSponsoredUserOperation,
+    eoa,
+  } = useSmartAccount();
 
   // If the user is not authenticated, redirect them back to the landing page
   useEffect(() => {
@@ -36,28 +26,6 @@ export default function DashboardPage() {
     }
   }, [ready, authenticated, router]);
 
-  // RPC client connected to the Base Goerli Paymaster, used to populate
-  // `paymasterAndData` field of user operations
-  const basePaymasterRpc: Client = useMemo(
-    () =>
-      createPublicClient({
-        chain: baseGoerli,
-        transport: http(BASE_GOERLI_PAYMASTER_URL),
-      }),
-    []
-  );
-
-  // RPC client connected to Alchemy's Base Goerli RPC URL, used to submit
-  // signed user operations to the network
-  const baseBundlerRpc: PublicErc4337Client = useMemo(
-    () =>
-      createPublicErc4337Client({
-        chain: baseGoerli,
-        rpcUrl: process.env.NEXT_PUBLIC_ALCHEMY_BASE_RPC_URL as string,
-      }),
-    []
-  );
-
   const isLoading = !smartAccountAddress || !smartAccountProvider;
   const [isMinting, setIsMinting] = useState(false);
 
@@ -65,62 +33,59 @@ export default function DashboardPage() {
     // The mint button is disabled if either of these are undefined
     if (!smartAccountProvider || !smartAccountAddress) return;
 
+    // Store a state to disable the mint button while mint is in progress
     setIsMinting(true);
     const toastId = toast.loading("Minting...");
 
-    // (1) Build the initial user op by encoding function data for the ERC-721
-    // `mint` method
-    const initialUserOp = await smartAccountProvider.buildUserOperationFromTx({
-      from: smartAccountAddress as `0x${string}`,
-      to: NFT_ADDRESS,
-      data: encodeFunctionData({
-        abi: ABI,
-        functionName: "mint",
-        args: [smartAccountAddress],
-      }),
-    });
-    const formattedUserOp = formatUserOpAsHex(initialUserOp);
+    try {
+      // From a viem `RpcTransactionRequest` (e.g. calling an ERC-721's `mint` method),
+      // build and send a user operation. Gas fees will be sponsored by the Base Paymaster.
+      const userOpHash = await sendSponsoredUserOperation({
+        from: smartAccountAddress,
+        to: NFT_ADDRESS,
+        data: encodeFunctionData({
+          abi: ABI,
+          functionName: "mint",
+          args: [smartAccountAddress],
+        }),
+      });
 
-    // (2) Buffer `preVerificationGas` and `verificationGasLimit` with gas needed to
-    // verify the paymaster
-    const bufferedUserOp = bufferUserOpWithVerificationGas(formattedUserOp);
+      toast.update(toastId, {
+        render: "Waiting for your transaction to be confirmed...",
+        type: "info",
+        isLoading: true,
+      });
 
-    // (3) Query Base Goerli paymaster and populate `paymasterAndData` field of user op
-    const userOpWithPaymaster = await addPaymasterAndDataToUserOp(
-      bufferedUserOp,
-      basePaymasterRpc
-    );
+      // Once we have a hash for the user operation, watch it until the transaction has
+      // been confirmed.
+      const transactionHash =
+        await smartAccountProvider.waitForUserOperationTransaction(userOpHash);
 
-    // (4) Hash and sign the user op
-    const signedUserOp = await signUserOp(
-      userOpWithPaymaster,
-      smartAccountProvider
-    );
+      toast.update(toastId, {
+        render: (
+          <Alert href={`${BASE_GOERLI_SCAN_URL}/tx/${transactionHash}`}>
+            Successfully minted! Click here to see your transaction.
+          </Alert>
+        ),
+        type: "success",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    } catch (error) {
+      console.error("Mint failed with error: ", error);
+      toast.update(toastId, {
+        render: (
+          <Alert>
+            There was an error sending your transaction. See the developer
+            console for more info.
+          </Alert>
+        ),
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
 
-    // (5) Submit the user op to the mempool and get hash
-    const userOpHash = await baseBundlerRpc.sendUserOperation(
-      signedUserOp,
-      BASE_GOERLI_ENTRYPOINT_ADDRESS
-    );
-
-    // Watch userOpHash and wait for the transaction to be confirmed
-    const transactionHash =
-      await smartAccountProvider.waitForUserOperationTransaction(userOpHash);
-
-    toast.update(toastId, {
-      render: (
-        <a
-          href={`${BASE_GOERLI_SCAN_URL}/tx/${transactionHash}`}
-          target="_blank"
-          color="#FF8271"
-        >
-          Successfully minted! Click here to see your transaction.
-        </a>
-      ),
-      type: "success",
-      isLoading: false,
-      autoClose: 5000,
-    });
     setIsMinting(false);
   };
 
