@@ -1,13 +1,16 @@
 # Privy x Base Paymaster Demo
 
-This is demo app demonstrates a user flow of (1) signing-in with email/social, (2) getting a smart wallet, and (3) taking an on-chain action (minting an ERC-721), without requiring the user or the app to pay _any_ gas fees.
+This is demo app that showcases a a user flow of:
+- Signing-in with email/social
+- Getting a smart wallet (ERC-4337)
+- Taking an on-chain action (minting an ERC-721), without requiring the user or the app to pay _any_ gas fees.
 
 This app uses:
 - [**Privy**](https://www.privy.io/) for simple onboarding, secure authentication, and powerful embedded wallets
 - [**AccountKit**](https://accountkit.alchemy.com/) for ERC-4337 support and smart contract account functionality
 - [**viem**](https://viem.sh/) for interfacing with wallets and public clients
 - the **Base Goerli Paymaster** for having Coinbase sponsor all gas fees, for both the user and the app
-- NextJS as the web application framework
+- [**NextJS**](https://nextjs.org/) as the web application framework
 
 **You can see the deployed app at [`https://base-paymaster-example.vercel.app/`](https://base-paymaster-example.vercel.app/)!**
 
