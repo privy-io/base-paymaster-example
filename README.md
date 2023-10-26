@@ -91,3 +91,12 @@ const userOpHash = sendSponsoredUserOperation({
     ...insertRpcTransactionRequest
 });
 ```
+
+## Check out
+- `pages/_app.tsx` for how to setup your `PrivyProvider` and wrap your app's pages/components with it
+- `hooks/SmartAccountContext.tsx` for how to initialize smart contract wallets from your users' Privy embedded wallets (EOA)
+- `lib/user-operations.ts` for helper functions to format, populate, hash, and sign user operations
+- `pages/dashboard.tsx` for how to send a user operation for minting an ERC-721
+- Privy Docs: https://docs.privy.io/
+- Alchemy AccountKit Docs: https://accountkit.alchemy.com/
+- Viem Docs: https://viem.sh/
