@@ -75,7 +75,10 @@ import {useSmartAccount} from '../hooks/SmartAccountContext.tsx';
 ...
 
 // The rest of this code must be used within a React Component
-const {smartAccountAddress, smartAccountProvider, sendSponsoredUserOperation} = useSmartAccount();
+const {smartAccountReady, smartAccountAddress, smartAccountProvider, sendSponsoredUserOperation} = useSmartAccount();
+
+// Determine if the smart account is ready to be used
+const ready = smartAccountReady;
 
 // Get the smart account's address
 const address = smartAccountAddress;
