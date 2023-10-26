@@ -1,6 +1,6 @@
 # Privy x Base Paymaster Demo
 
-This is demo app that showcases a a user flow of:
+This demo app that showcases a user flow of:
 - Signing-in with email/social
 - Getting a smart wallet (ERC-4337)
 - Taking an on-chain action (minting an ERC-721), without requiring the user or the app to pay _any_ gas fees.
@@ -59,6 +59,8 @@ You should then wrap your app with the `SmartAccountProvider` exported by `hooks
 import {PrivyProvider} from '@privy-io/react-auth';
 import {SmartAccountProvider} from '../hooks/SmartAccountContext.tsx';
 
+...
+
 <PrivyProvider {...insertYourPrivyProviderProps} >
   <SmartAccountProvider>
     <Component {...pageProps} />
@@ -69,6 +71,8 @@ import {SmartAccountProvider} from '../hooks/SmartAccountContext.tsx';
 You can now use the smart account from components/pages in your app, like so:
 ```tsx
 import {useSmartAccount} from '../hooks/SmartAccountContext.tsx';
+
+...
 
 // The rest of this code must be used within a React Component
 const {smartAccountAddress, smartAccountProvider, sendSponsoredUserOperation} = useSmartAccount();
